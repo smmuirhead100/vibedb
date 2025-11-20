@@ -1,14 +1,17 @@
+import os
 from typing import AsyncGenerator
-from .models import ClaudeAgentOptions, AgentDefinition
+
+from anthropic import AsyncAnthropic
+from .models import AnthropicLLMModel
 from llms.llm import LLM as BaseLLM
 
 
 class LLM(BaseLLM):
-    def __init__(self, model: AnthropicLLMModel) -> None:
+    def __init__(self, model: AnthropicLLMModel = AnthropicLLMModel.CLAUDE_4_5_SONNET) -> None:
         self.model = model
-        self.client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        self.client = AsyncAnthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 
-    def astream(self, prompt: str) -> AsyncGenerator[str]:
+    async def astream(self, prompt: str) -> AsyncGenerator[str]:
         async for message in query(
             prompt=prompt,
             options=ClaudeAgentOptions(
