@@ -7,7 +7,7 @@ def chat_messages_to_anthropic_system_and_messages(messages: list[ChatMessage]) 
     system_prompt = next((m.content for m in messages if m.role == ChatRole.SYSTEM), None)
     if not system_prompt:
         raise ValueError("No system prompt found!")
-    
+
     anthropic_messages = []
     for msg in messages:
         role = "assistant" if msg.role == ChatRole.ASSISTANT else "user"

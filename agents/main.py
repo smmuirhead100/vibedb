@@ -1,7 +1,7 @@
 import asyncio
-from agents.agent_with_tools import AgentWithTools, AgentWithToolsOptions
-from agents.chat_context import ChatMessage, ChatRole
-from agents.tools import ToolCall
+from agents.core.agent_with_tools import AgentWithTools, AgentWithToolsOptions
+from agents.core.chat_context import ChatMessage, ChatRole
+from agents.core.tools import ToolCall
 from llms.anthropic.models import AnthropicLLMModel
 from llms.anthropic.llm import LLM
 
@@ -12,7 +12,7 @@ async def run():
     agent = AgentWithTools(options=options)
 
     # Initialize messages with system message
-    messages: list[ChatMessage] = [ChatMessage(role=ChatRole.SYSTEM, content="You are a silly agent.")]
+    messages: list[ChatMessage] = [ChatMessage(role=ChatRole.SYSTEM, content="Testing")]
 
     print("Chat with the agent! Type 'exit' or 'quit' to end the conversation.\n")
 
@@ -35,7 +35,6 @@ async def run():
             else:
                 print(chunk, end="", flush=True)
                 assistant_content_parts.append(chunk)
-
         print()
 
         # Add assistant response to history
