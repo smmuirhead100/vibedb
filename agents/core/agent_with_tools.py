@@ -1,8 +1,8 @@
 from typing import AsyncGenerator
 
 from pydantic import BaseModel, ConfigDict
-from agents.chat_context import ChatMessage
-from agents.tools import Tool, ToolCall
+from agents.core.chat_context import ChatMessage
+from agents.core.tools import Tool, ToolCall
 from llms.llm import LLM
 
 

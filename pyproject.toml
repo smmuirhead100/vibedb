@@ -12,6 +12,8 @@ pydantic = "^2.12.4"
 anthropic = "^0.74.1"
 dotenv = "^0.9.9"
 
+[tool.pylint]
+disable = ["line-too-long"]
 
 [build-system]
 requires = ["poetry-core"]
