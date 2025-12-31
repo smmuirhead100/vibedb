@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This project is the **VibeDB Claude Agents SDK** - a framework for building AI agents powered by Anthropic's Claude models. The SDK provides a flexible architecture for creating agents that can use tools, maintain conversation context, and interact with external systems (databases, shell commands, etc.).
+This project is **VibeDB** - a magic database that runs an AI agent under the hood on top of a postgres DB. Users just give it any form of random data and it just works!
 
 ## Project Structure
 
