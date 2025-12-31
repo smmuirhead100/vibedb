@@ -3,6 +3,8 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from agents.core.agent_with_tools import AgentWithTools
 from agents.core.tools import tool
+from llms.gemini.models import GeminiLLMModel
+from llms.gemini.llm import LLM
 
 INSTRUCTIONS = """
 # Identity
@@ -26,13 +28,11 @@ When executing SQL queries:
 
 
 class AgentWithSQLTools(AgentWithTools):
-    def __init__(
-        self,
-        database_url: str,
-        *args,
-        **kwargs
-    ) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, database_url: str) -> None:
+        llm = LLM(model=GeminiLLMModel.GEMINI_3_FLASH_PREVIEW)
+        
+        super().__init__(llm=llm, instructions=INSTRUCTIONS)
+        
         self.database_url = database_url
         self.engine = create_engine(database_url)
         self.inspector = sql_inspect(self.engine)

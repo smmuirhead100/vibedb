@@ -10,11 +10,7 @@ async def run():
     llm = GeminiLLM(model=GeminiLLMModel.GEMINI_3_FLASH_PREVIEW)
     # Update this connection string to match your local PostgreSQL instance
     database_url = "postgresql://localhost/alcatraz"
-    agent = AgentWithSQLTools(
-        database_url=database_url,
-        llm=llm,
-        instructions=INSTRUCTIONS
-    )
+    agent = AgentWithSQLTools(database_url=database_url)
 
     print("Chat with the SQL agent! Type 'exit' or 'quit' to end the conversation.\n")
 
