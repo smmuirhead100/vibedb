@@ -2,8 +2,6 @@ import asyncio
 from agents.builtins.agent_with_sql_tools import AgentWithSQLTools, INSTRUCTIONS
 from agents.core.chat_context import ChatMessage, ChatRole
 from agents.core.tools import ToolCall
-from llms.anthropic.models import AnthropicLLMModel
-from llms.anthropic.llm import LLM as AnthropicLLM
 from llms.gemini.models import GeminiLLMModel
 from llms.gemini.llm import LLM as GeminiLLM
 
