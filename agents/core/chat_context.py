@@ -14,4 +14,4 @@ class ChatRole(Enum):
 
 class ChatMessage(BaseModel):
     role: ChatRole
-    content: str | ToolCall | List[ToolCall]
+    content: str | ToolCall

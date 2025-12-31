@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "claude-agents-sdk-stuff"
+name = "vibedb"
 version = "0.1.0"
 description = ""
 authors = ["Sean Muirhead <smmuirhead100@berkeley.edu>"]
