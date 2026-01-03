@@ -6,9 +6,7 @@ from agents.core.tools import ToolCall
 class Client:
     def __init__(self, database_url: str) -> None:
         self.db_url = database_url
-        self._agent = AgentWithSQLTools(
-            database_url=database_url,
-        )
+        self._agent = AgentWithSQLTools(database_url=database_url)
 
     async def execute(self, query: str) -> str:
         response = ""
