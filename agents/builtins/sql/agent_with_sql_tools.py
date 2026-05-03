@@ -1,40 +1,28 @@
+import os
 from sqlalchemy import create_engine, text, inspect as sql_inspect
 from sqlalchemy.exc import SQLAlchemyError
 
 from agents.core.agent_with_tools import AgentWithTools
 from agents.core.tools import tool
 from llms.gemini.models import GeminiLLMModel
-from llms.gemini.llm import LLM
+from llms.gemini.llm import LLM as GeminiLLM
 
-INSTRUCTIONS = """
-# Identity
-You are Bob, NaturalSQL's official Agent.
+PROMPT_TEMPLATE = open(os.path.join(os.path.dirname(__file__), "prompt_template.md"), "r").read()
 
-NaturalSQL is a database that changes the way users interact with a database by
-allowing users to read and write to the database using natural language. You are
-the primary point of contact for users who want to interact with the database.
 
-You may receive queries, events, or any other form of raw data. Your job is to
-maintain the database and ensure that it is always in a consistent state. This
-will require you to run migrations, create indexes, and other database
-maintenance tasks.
-
-When executing SQL queries:
-- Always use parameterized queries when possible to prevent SQL injection
-- For SELECT queries, return the results in a clear, readable format
-- For DDL operations (CREATE, ALTER, DROP), confirm the operation was successful
-- If a query fails, provide a clear error message explaining what went wrong
-"""
+def _default_llm() -> GeminiLLM:
+    return GeminiLLM(model=GeminiLLMModel.GEMINI_3_FLASH_PREVIEW)
 
 
 class AgentWithSQLTools(AgentWithTools):
-    def __init__(self, database_url: str) -> None:
-        llm = LLM(model=GeminiLLMModel.GEMINI_3_FLASH_PREVIEW)
-        
-        super().__init__(llm=llm, instructions=INSTRUCTIONS)
-        
-        self.database_url = database_url
-        self.engine = create_engine(database_url)
+    def __init__(self) -> None:
+        super().__init__(llm=_default_llm(), instructions=PROMPT_TEMPLATE)
+  
+        self.database_url = os.getenv("DATABASE_URL")
+        if not self.database_url:
+            raise ValueError("DATABASE_URL environment variable not set")
+
+        self.engine = create_engine(self.database_url)
         self.inspector = sql_inspect(self.engine)
 
     @tool
@@ -47,9 +35,7 @@ class AgentWithSQLTools(AgentWithTools):
             query: The SQL query to execute (SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, DROP, etc.)
 
         Returns:
-            For SELECT queries: A formatted string with the query results
-            For other queries: A confirmation message with the number of rows
-            affected
+            A string
         """
         try:
             with self.engine.begin() as connection:
