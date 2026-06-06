@@ -7,6 +7,7 @@ from agents.core.tools import tool
 from llms.gemini.models import GeminiLLMModel
 from llms.gemini.llm import LLM as GeminiLLM
 
+
 PROMPT_TEMPLATE = open(os.path.join(os.path.dirname(__file__), "prompt_template.md"), "r").read()
 
 
@@ -15,13 +16,9 @@ def _default_llm() -> GeminiLLM:
 
 
 class AgentWithSQLTools(AgentWithTools):
-    def __init__(self) -> None:
+    def __init__(self, database_url: str) -> None:
         super().__init__(llm=_default_llm(), instructions=PROMPT_TEMPLATE)
-  
-        self.database_url = os.getenv("DATABASE_URL")
-        if not self.database_url:
-            raise ValueError("DATABASE_URL environment variable not set")
-
+        self.database_url = database_url
         self.engine = create_engine(self.database_url)
         self.inspector = sql_inspect(self.engine)
 

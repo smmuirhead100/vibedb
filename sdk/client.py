@@ -1,11 +1,30 @@
+import os
+from typing import Optional
 from agents.builtins.sql.agent_with_sql_tools import AgentWithSQLTools
 from agents.core.chat_context import ChatMessage, ChatRole
 from agents.core.tools import ToolCall
 
+import logging
+from rich.logging import RichHandler
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(message)s",
+    handlers=[
+        RichHandler(
+            rich_tracebacks=True,
+            show_path=False,
+        )
+    ],
+)
+
 
 class Client:
-    def __init__(self) -> None:
-        self._agent = AgentWithSQLTools()
+    def __init__(self, database_url: Optional[str] = None) -> None:
+        database_url = database_url or os.getenv("DATABASE_URL")
+        if not database_url:
+            raise ValueError("DATABASE_URL environment variable not set or provided")
+        self._agent = AgentWithSQLTools(database_url=database_url)
 
     async def execute(self, query: str) -> str:
         """Execute an arbitrary query against the database."""

@@ -7,6 +7,9 @@ from agents.core.chat_context import ChatMessage, ChatRole
 from agents.core.tools import Tool, ToolCall
 from llms.llm import LLM
 
+import logging
+logger = logging.getLogger(__name__)
+
 _IS_TOOL = "is_tool"
 
 
