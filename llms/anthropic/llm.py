@@ -11,6 +11,9 @@ from .models import AnthropicLLMModel
 from llms.llm import LLM as BaseLLM
 from dotenv import load_dotenv
 
+import logging
+logger = logging.getLogger(__name__)
+
 load_dotenv()
 
 
@@ -25,6 +28,9 @@ class LLM(BaseLLM):
         tools: List[Tool],
     ) -> AsyncGenerator[str | ToolCall]:
         system, messages = chat_messages_to_anthropic_system_and_messages(messages)
+        logger.debug(f"System: {system}")
+        logger.debug(f"Messages: {messages}")
+        
         stream = await self.client.messages.create(
             max_tokens=1024,
             system=system,

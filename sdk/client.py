@@ -1,6 +1,7 @@
 import os
-from typing import Optional
+from typing import Optional, Self
 from agents.builtins.sql.agent_with_sql_tools import AgentWithSQLTools
+from agents.builtins.sql.schemas import AgentWithSQLToolsOptions
 from agents.core.chat_context import ChatMessage, ChatRole
 from agents.core.tools import ToolCall
 
@@ -18,31 +19,37 @@ logging.basicConfig(
     ],
 )
 
+logger = logging.getLogger(__name__)
+
 
 class Client:
-    def __init__(self, database_url: Optional[str] = None) -> None:
-        database_url = database_url or os.getenv("DATABASE_URL")
-        if not database_url:
-            raise ValueError("DATABASE_URL environment variable not set or provided")
-        self._agent = AgentWithSQLTools(database_url=database_url)
+    def __init__(self, agent: AgentWithSQLTools) -> None:
+        self._agent = agent
+
+    @classmethod
+    async def create(cls, database_url: str) -> Self:
+        agent = await AgentWithSQLTools.create(database_url=database_url)
+        return cls(agent=agent)
 
     async def execute(self, query: str) -> str:
         """Execute an arbitrary query against the database."""
         response = ""
         async for chunk in self._agent.astream(chat_message=ChatMessage(role=ChatRole.USER, content=query)):
             if isinstance(chunk, ToolCall):
+                logger.info(f"Tool call: {chunk.name}({chunk.args}) -> {chunk.response}")
                 continue
+            logger.info(f"Chunk: {chunk}")
             response += chunk
         return response
 
-    async def create(self, query: str) -> str:
-        """Create a new record in the database."""
-        response = ""
-        async for chunk in self._agent.astream(chat_message=ChatMessage(role=ChatRole.USER, content=query)):
-            if isinstance(chunk, ToolCall):
-                continue
-            response += chunk
-        return response
+    # async def create(self, query: str) -> str:
+    #     """Create a new record in the database."""
+    #     response = ""
+    #     async for chunk in self._agent.astream(chat_message=ChatMessage(role=ChatRole.USER, content=query)):
+    #         if isinstance(chunk, ToolCall):
+    #             continue
+    #         response += chunk
+    #     return response
 
     async def get(self, query: str) -> str:
         """Get a record from the database."""

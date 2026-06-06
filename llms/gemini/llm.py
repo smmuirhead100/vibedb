@@ -11,6 +11,9 @@ from .models import GeminiLLMModel
 from llms.llm import LLM as BaseLLM
 from dotenv import load_dotenv
 
+import logging
+logger = logging.getLogger(__name__)
+
 load_dotenv()
 
 
@@ -28,7 +31,9 @@ class LLM(BaseLLM):
         tools: List[Tool],
     ) -> AsyncGenerator[str | ToolCall]:
         system_prompt, contents = chat_messages_to_gemini_system_and_contents(messages)
-
+        logger.debug(f"System prompt: {system_prompt}")
+        logger.debug(f"Contents: {contents}")
+        
         # Prepare tools configuration
         function_declarations = [tool_to_gemini_function_declaration(t) for t in tools]
         gemini_tools = types.Tool(function_declarations=function_declarations) if function_declarations else None
