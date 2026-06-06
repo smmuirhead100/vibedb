@@ -7,8 +7,9 @@ DB_URL = "postgresql://localhost/alcatraz"
 async def run():
     # 1. Instantiate the client and send some data
     client = await Client.create(database_url=DB_URL)
-    await client.execute("Make sure no duplicate users are created from here on out.")
+    # await client.execute("Make sure no duplicate users are created from here on out.")
     await client.execute("New Event: new user signed up with first name 'Sean' and last name 'Muirhead'. Phone number is 555-555-1234.")
+    await client.execute("New Event: new user signed up with first name 'Bob' and last name 'Test'. Phone number is 555-555-5555.")
     # await client.execute("Sean Muirhead changed their phone number from 555-555-1234 to 555-555-5555")
     # await client.execute("Add these colors of shoes: red, green, blue")
     # await client.execute("New Event: new user signed up with first name 'Bob' and last name 'Test'. No phone number.")

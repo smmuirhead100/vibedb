@@ -1,7 +1,5 @@
 from pydantic import BaseModel
 
-from agents.builtins.sql.database_service import DatabaseService
-
 
 class AgentWithSQLToolsPermissions(BaseModel):
     create: bool = True
