@@ -21,7 +21,7 @@ Below are the permissions that you have. You may only use the permissions that a
 ---
 
 # Database Overview
-Below is a brief overview of the database. All the tables are listed.
+Below is a brief overview of the database. All tables, columns, data types, primary keys, and constraints are listed below. Use this information to help you write the SQL query. This should also prevent you from having to write redundant queries, as most of the information is already provided below.
 
 <database_overview>
 {database_overview}

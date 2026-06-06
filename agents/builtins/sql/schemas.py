@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from agents.builtins.sql.services import DatabaseService
+from agents.builtins.sql.database_service import DatabaseService
 
 
 class AgentWithSQLToolsPermissions(BaseModel):
