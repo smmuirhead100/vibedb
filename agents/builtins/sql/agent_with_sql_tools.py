@@ -1,15 +1,19 @@
 import os
-from typing import Self, Type
+from typing import Optional, Self, Type
 
 from pydantic import BaseModel
 
 from agents.builtins.sql.schemas import AgentWithSQLToolsOptions, AgentWithSQLToolsPermissions
+from agents.core.chat_context import ChatMessage, ChatRole
 from sdk.query_cache import QueryCache
 from agents.core.agent_with_tools import AgentWithTools
-from agents.core.tools import tool
+from agents.core.tools import ToolCall, tool
 from llms.gemini.models import GeminiLLMModel
 from llms.gemini.llm import LLM as GeminiLLM
-from sdk.database_service import DatabaseService
+from sdk.database_service import DatabaseService, ExecuteQueryResult
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 PROMPT_TEMPLATE = open(os.path.join(os.path.dirname(__file__), "prompt_template.md"), "r").read()
@@ -58,7 +62,7 @@ class AgentWithSQLTools(AgentWithTools):
             options=options,
         )
 
-    async def execute(self, query: str, return_as: Type[BaseModel] | None = None) -> BaseModel | str:
+    async def execute(self, query: str, return_as: Type[BaseModel] | None = None) -> Optional[BaseModel]:
         """Execute a SQL query against the database and return the results."""
         cached_query = self.query_cache.get_cached_query(query)
         if cached_query:
@@ -66,11 +70,19 @@ class AgentWithSQLTools(AgentWithTools):
             response = await self.db_service.execute_query(resolved_sql)
         else:
             response = ""
+            # TODO: For large queries, we're gonna need to let the LLM write a script or something. It can't just output everything manually.
+            # Something like this maybe? execute_query(query: str, lambda: Callable[[str], ExecuteQueryResult])
             async for chunk in self.astream(chat_message=ChatMessage(role=ChatRole.USER, content=query)):
                 if isinstance(chunk, ToolCall):
+                    logger.info(f"TOOL CALL: {chunk.name}({chunk.args}) -> {chunk.response}")
+                    continue
+                response += chunk
+        if return_as:
+            return return_as.model_validate_json(response.model_dump_json())
+        return None
     
     @tool
-    async def execute_query(self, query: str) -> str:
+    async def execute_query(self, query: str) -> ExecuteQueryResult:
         """
         Execute a SQL query against the database and return the results.
         Use this for SELECT queries to retrieve data, or for DDL/DML operations.
@@ -79,7 +91,46 @@ class AgentWithSQLTools(AgentWithTools):
             query: The SQL query to execute (SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, DROP, etc.)
 
         Returns:
-            A string
+            An ExecuteQueryResult object. Here is the rough implementation of this method under the hood:
+                ```
+                class ExecuteQueryRowValueResult(BaseModel):
+                    column: str
+                    value: Any
+
+
+                class ExecuteQueryRowResult(BaseModel):
+                    values: list[ExecuteQueryRowValueResult]
+
+
+                class ExecuteQueryResult(BaseModel):
+                    rows: list[ExecuteQueryRowResult]
+
+
+                async def execute_query(self, query: str) -> ExecuteQueryResult:
+                    try:
+                        async with self.engine.begin() as connection:
+                            result = await connection.execute(text(query))
+
+                            if result.returns_rows:
+                                rows = result.fetchall()
+                                columns = result.keys()
+
+                                if not rows:
+                                    return ExecuteQueryResult(rows=[])
+
+                                return ExecuteQueryResult(rows=[ExecuteQueryRowResult(
+                                    values=[
+                                        ExecuteQueryRowValueResult(column=col, value=val)
+                                        for col, val in zip(columns, row)
+                                        if val is not None
+                                    ]
+                                ) for row in rows])
+                            return ExecuteQueryResult(rows=[])
+                    except SQLAlchemyError as e:
+                        raise Exception(f"Error executing query: {str(e)}")
+                    except Exception as e:
+                        raise Exception(f"Unexpected error: {str(e)}")
+                ```
         """
         return await self.db_service.execute_query(query)
 

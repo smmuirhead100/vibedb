@@ -1,5 +1,5 @@
 import logging
-from typing import Self, Type
+from typing import Any, Self, Type
 
 from pydantic import BaseModel
 from rich.logging import RichHandler
@@ -42,10 +42,10 @@ class Client:
         agent = await AgentWithSQLTools.create(db_service=db_service, query_cache=query_cache)
         return cls(agent=agent, db_service=db_service, query_cache=query_cache)
 
-    async def execute(self, query: str, return_as: Type[BaseModel] | None = None) -> BaseModel | str:
+    async def execute(self, query: str, return_as: Type[Any] | None = None) -> BaseModel:
         """Execute an arbitrary query against the database."""
         cached_query = self._query_cache.get_cached_query(query)
-        if cached_query:
+        if cached_query:    
             resolved_sql, _ = cached_query
             logger.info(f"Cached query: {query} -> {resolved_sql}")
             response = await self._db_service.execute_query(resolved_sql)

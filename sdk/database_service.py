@@ -1,3 +1,6 @@
+from ast import Dict
+from typing import Any
+from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
@@ -13,11 +16,28 @@ def _to_async_url(db_url: str) -> str:
     return db_url
 
 
+class ExecuteQueryRowValueResult(BaseModel):
+    column: str
+    value: Any
+
+
+class ExecuteQueryRowResult(BaseModel):
+    values: list[ExecuteQueryRowValueResult]
+
+
+class ExecuteQueryResult(BaseModel):
+    rows: list[ExecuteQueryRowResult]
+
+
+class ExecuteQueryError(BaseModel):
+    message: str
+
+
 class DatabaseService:
     def __init__(self, db_url: str) -> None:
         self.engine: AsyncEngine = create_async_engine(_to_async_url(db_url))
 
-    async def execute_query(self, query: str) -> str:
+    async def execute_query(self, query: str) -> ExecuteQueryResult | ExecuteQueryError:
         try:
             async with self.engine.begin() as connection:
                 result = await connection.execute(text(query))
@@ -27,27 +47,20 @@ class DatabaseService:
                     columns = result.keys()
 
                     if not rows:
-                        return "Query executed successfully. No rows returned."
+                        return ExecuteQueryResult(rows=[])
 
-                    output_parts = []
-                    header = " | ".join(str(col) for col in columns)
-                    output_parts.append(header)
-                    output_parts.append("-" * len(header))
-                    for row in rows:
-                        row_str = " | ".join(
-                            str(val) if val is not None else "NULL" for val in row
-                        )
-                        output_parts.append(row_str)
-
-                    return "\n".join(output_parts)
-
-                rowcount = result.rowcount
-                return f"Query executed successfully. Rows affected: {rowcount}"
-
+                    return ExecuteQueryResult(rows=[ExecuteQueryRowResult(
+                        values=[
+                            ExecuteQueryRowValueResult(column=col, value=val)
+                            for col, val in zip(columns, row)
+                            if val is not None
+                        ]
+                    ) for row in rows])
+                return ExecuteQueryResult(rows=[])
         except SQLAlchemyError as e:
-            return f"Error executing query: {str(e)}"
+            return ExecuteQueryError(message=f"Error executing query: {str(e)}")
         except Exception as e:
-            return f"Unexpected error: {str(e)}"
+            return ExecuteQueryError(message=f"Unexpected error: {str(e)}")
 
     async def get_overview_of_database(self) -> str:
         try:
