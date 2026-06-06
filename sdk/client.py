@@ -1,6 +1,7 @@
 import logging
-from typing import Self
+from typing import Self, Type
 
+from pydantic import BaseModel
 from rich.logging import RichHandler
 
 from agents.builtins.sql.agent_with_sql_tools import AgentWithSQLTools
@@ -41,57 +42,18 @@ class Client:
         agent = await AgentWithSQLTools.create(db_service=db_service, query_cache=query_cache)
         return cls(agent=agent, db_service=db_service, query_cache=query_cache)
 
-    async def execute(self, query: str) -> str:
+    async def execute(self, query: str, return_as: Type[BaseModel] | None = None) -> BaseModel | str:
         """Execute an arbitrary query against the database."""
         cached_query = self._query_cache.get_cached_query(query)
         if cached_query:
             resolved_sql, _ = cached_query
             logger.info(f"Cached query: {query} -> {resolved_sql}")
-            return await self._db_service.execute_query(resolved_sql)
-
-        response = ""
-        async for chunk in self._agent.astream(chat_message=ChatMessage(role=ChatRole.USER, content=query)):
-            if isinstance(chunk, ToolCall):
-                logger.info(f"Tool call: {chunk.name}({chunk.args}) -> {chunk.response}")
-                continue
-            logger.info(f"Chunk: {chunk}")
-            response += chunk
-        return response
-
-    # async def create(self, query: str) -> str:
-    #     """Create a new record in the database."""
-    #     response = ""
-    #     async for chunk in self._agent.astream(chat_message=ChatMessage(role=ChatRole.USER, content=query)):
-    #         if isinstance(chunk, ToolCall):
-    #             continue
-    #         response += chunk
-    #     return response
-
-    async def get(self, query: str) -> str:
-        """Get a record from the database."""
-        response = ""
-        async for chunk in self._agent.astream(chat_message=ChatMessage(role=ChatRole.USER, content=query)):
-            if isinstance(chunk, ToolCall):
-                continue
-            response += chunk
-        return response
-
-    async def update(self, query: str) -> str:
-        """Update a record in the database."""
-        response = ""
-        async for chunk in self._agent.astream(chat_message=ChatMessage(role=ChatRole.USER, content=query)):
-            if isinstance(chunk, ToolCall):
-                continue
-            response += chunk
-        return response
-
-    async def delete(self, query: str) -> str:
-        """Delete a record from the database."""
-        response = ""
-        async for chunk in self._agent.astream(chat_message=ChatMessage(role=ChatRole.USER, content=query)):
-            if isinstance(chunk, ToolCall):
-                continue
-            response += chunk
+            response = await self._db_service.execute_query(resolved_sql)
+            if return_as:
+                return return_as.model_validate_json(response)
+        else:
+            response = ""
+            response = await self._agent.execute(query=query, return_as=return_as)
         return response
 
     async def dispose(self) -> None:

@@ -1,5 +1,7 @@
 import os
-from typing import Self
+from typing import Self, Type
+
+from pydantic import BaseModel
 
 from agents.builtins.sql.schemas import AgentWithSQLToolsOptions, AgentWithSQLToolsPermissions
 from sdk.query_cache import QueryCache
@@ -56,6 +58,17 @@ class AgentWithSQLTools(AgentWithTools):
             options=options,
         )
 
+    async def execute(self, query: str, return_as: Type[BaseModel] | None = None) -> BaseModel | str:
+        """Execute a SQL query against the database and return the results."""
+        cached_query = self.query_cache.get_cached_query(query)
+        if cached_query:
+            resolved_sql, _ = cached_query
+            response = await self.db_service.execute_query(resolved_sql)
+        else:
+            response = ""
+            async for chunk in self.astream(chat_message=ChatMessage(role=ChatRole.USER, content=query)):
+                if isinstance(chunk, ToolCall):
+    
     @tool
     async def execute_query(self, query: str) -> str:
         """
