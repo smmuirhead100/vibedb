@@ -1,5 +1,5 @@
-from ast import List
 from pydantic import BaseModel
+from typing import List
 from sdk.client import Client
 
 
@@ -18,8 +18,13 @@ async def run():
     # 1. Instantiate the client and send some data
     client = await Client.create(database_url=DB_URL)
     # await client.execute("Make sure no duplicate users are created from here on out.")
-    users = await client.execute("Get first user with last name 'Muirhead'", User)  # TODO: Should be allowed to do List[User] here.
+    users = await client.execute("Get last 3 users created in descending order by created_at", return_as=List[User])
     print(f"Users: {users}")
+    
+    # This one should be really fast because it is cached.
+    users_again = await client.execute("Get last 1 users created in descending order by created_at", return_as=List[User])
+    print(f"Users again: {users_again}")
+
     # await client.execute("New Event: new user signed up with first name 'Bob' and last name 'Test'. Phone number is 555-555-5555.")
     # await client.execute("Sean Muirhead changed their phone number from 555-555-1234 to 555-555-5555")
     # await client.execute("Add these colors of shoes: red, green, blue")

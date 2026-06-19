@@ -12,3 +12,7 @@ VibeDB lets you throw anything into a database and it just works. You never need
 - [ ] Add CLI
 - [ ] Support SQLite
 - [ ] Schema updates automatically posted to pypi
+- [ ] Automatic query optimization
+- [ ] Support multiple databases under one client (i.e. client is doing many ILIKE queries, perhaps a vector database is better)
+- [ ] CI / CD pipeline
+- [ ] Poor Practice Detection (N+1s, etc.)

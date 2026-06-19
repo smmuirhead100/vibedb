@@ -37,10 +37,10 @@ class DatabaseService:
     def __init__(self, db_url: str) -> None:
         self.engine: AsyncEngine = create_async_engine(_to_async_url(db_url))
 
-    async def execute_query(self, query: str) -> ExecuteQueryResult | ExecuteQueryError:
+    async def execute_query(self, query: str, params: dict[str, Any] | None = None) -> ExecuteQueryResult | ExecuteQueryError:
         try:
             async with self.engine.begin() as connection:
-                result = await connection.execute(text(query))
+                result = await connection.execute(text(query), params or {})
 
                 if result.returns_rows:
                     rows = result.fetchall()

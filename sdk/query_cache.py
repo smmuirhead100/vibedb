@@ -1,20 +1,21 @@
 import re
-from typing import Callable
-
-from pydantic import BaseModel
-
-
-class QueryCacheValue(BaseModel):
-    sql_template: str
-    transformation_fxn: Callable[[str], BaseModel] | None = None
 
 
 class QueryCache:
+    """Caches agent-written query handlers keyed by a natural-language template.
+
+    Each entry maps a natural-language template (with `{placeholder}` slots) to the
+    source of an async `handler(execute_query, params)` function. When a future message
+    matches a template, the placeholder values are extracted into `params` and handed to
+    the handler, which runs the query and reshapes the result — no LLM needed.
+    """
+
     def __init__(self) -> None:
+        # natural_language_template -> handler source code
         self.cache: dict[str, str] = {}
 
-    def add(self, natural_language_template: str, sql_template: str) -> None:
-        self.cache[natural_language_template] = sql_template
+    def add(self, natural_language_template: str, handler_source: str) -> None:
+        self.cache[natural_language_template] = handler_source
 
     def _template_to_regex(self, template: str) -> tuple[re.Pattern, list[str]]:
         """
@@ -49,25 +50,19 @@ class QueryCache:
         """
         Try to match natural_language_query against all cached templates.
 
-        Returns (sql_query_with_values_substituted, args_dict) if a match is found,
-        or None if no template matches.
+        Returns (handler_source, params) if a match is found, or None if no template
+        matches. `params` is the dict of values extracted from the message, ready to be
+        passed straight to the cached handler.
 
         Example:
-            cache: {"Add new user with name {name} and email {email}":
-                    "INSERT INTO users (name, email) VALUES ('{name}', '{email}')"}
-            query: "Add new user with name 'John Doe' and email 'john.doe@example.com'"
-            returns: ("INSERT INTO users (name, email) VALUES ('John Doe', 'john.doe@example.com')",
-                      {"name": "John Doe", "email": "john.doe@example.com"})
+            cache: {"Get user with id {id}": "<handler source>"}
+            query: "Get user with id 7"
+            returns: ("<handler source>", {"id": "7"})
         """
-        for template, sql in self.cache.items():
-            pattern, placeholders = self._template_to_regex(template)
+        for template, handler_source in self.cache.items():
+            pattern, _ = self._template_to_regex(template)
             match = pattern.match(natural_language_query)
             if match:
-                args = match.groupdict()
-                # Substitute extracted values into the SQL template
-                resolved_sql = sql
-                for key, value in args.items():
-                    resolved_sql = resolved_sql.replace(f"{{{key}}}", value)
-                return resolved_sql, args
+                return handler_source, match.groupdict()
 
         return None
