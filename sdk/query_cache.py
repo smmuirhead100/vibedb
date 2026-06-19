@@ -1,12 +1,20 @@
 import re
+from typing import Callable
+
+from pydantic import BaseModel
+
+
+class QueryCacheValue(BaseModel):
+    sql_template: str
+    transformation_fxn: Callable[[str], BaseModel] | None = None
 
 
 class QueryCache:
     def __init__(self) -> None:
         self.cache: dict[str, str] = {}
 
-    def add_query_to_cache(self, template: str, corresponding_query: str) -> None:
-        self.cache[template] = corresponding_query
+    def add(self, natural_language_template: str, sql_template: str) -> None:
+        self.cache[natural_language_template] = sql_template
 
     def _template_to_regex(self, template: str) -> tuple[re.Pattern, list[str]]:
         """

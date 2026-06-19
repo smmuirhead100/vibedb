@@ -152,7 +152,7 @@ class AgentWithSQLTools(AgentWithTools):
         Returns:
             A confirmation message
         """
-        self.query_cache.add_query_to_cache(natural_language_template, sql_template)
+        self.query_cache.add(natural_language_template, sql_template)
         return "Query cached successfully."
 
     @tool

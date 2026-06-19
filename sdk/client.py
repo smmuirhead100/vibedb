@@ -44,17 +44,12 @@ class Client:
 
     async def execute(self, query: str, return_as: Type[Any] | None = None) -> BaseModel:
         """Execute an arbitrary query against the database."""
+        # 1. Check if the query is in cache.
         cached_query = self._query_cache.get_cached_query(query)
-        if cached_query:    
+        if cached_query:
             resolved_sql, _ = cached_query
-            logger.info(f"Cached query: {query} -> {resolved_sql}")
-            response = await self._db_service.execute_query(resolved_sql)
-            if return_as:
-                return return_as.model_validate_json(response)
-        else:
-            response = ""
-            response = await self._agent.execute(query=query, return_as=return_as)
-        return response
+            return await self._db_service.execute_query(resolved_sql)
+        return await self._agent.execute(query=query, return_as=return_as)
 
     async def dispose(self) -> None:
         await self._db_service.dispose()
