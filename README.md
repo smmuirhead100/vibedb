@@ -109,3 +109,4 @@ A runnable version of this lives in [`sdk/example.py`](sdk/example.py).
 - [ ] Support multiple databases under one client (e.g. route ILIKE-heavy workloads to a vector DB)
 - [ ] CI / CD pipeline
 - [ ] Poor Practice Detection (N+1s, etc.)
+- [ ] Distribute the query cache to multiple clients
