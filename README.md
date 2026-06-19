@@ -1,16 +1,16 @@
 # vibedb
 
 VibeDB lets you read and write to a database in plain English. You describe what you
-want; an LLM agent inspects your live schema, writes and runs the SQL, and hands the
+want, an LLM agent inspects your live schema, writes and runs the SQL, and hands the
 result back as a typed object.
 
 Repeated requests are cached: after handling a query, the agent saves a reusable handler
 keyed by a natural-language template, so the next matching request runs directly against
 the database with no LLM call.
 
-> ⚠️ Experimental. The agent generates and executes SQL — and cached handlers run
-> generated Python — against your database with no sandboxing. Don't point it at
-> anything you care about.
+> ⚠️ Experimental. The agent generates and executes SQL and cached handlers run
+> generated Python against your database with no sandboxing. Don't point it at
+> anything you care about!
 
 ## Install
 
