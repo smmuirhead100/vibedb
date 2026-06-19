@@ -7,6 +7,8 @@ VibeDB lets you throw anything into a database and it just works. You never need
 - [x] Agent-based query execution
 - [x] Query caching
 - [ ] Schema casting
+    - [ ] Pydantic models
+    - [ ] Python built-ins
 - [ ] Add CLI
 - [ ] Support SQLite
 - [ ] Schema updates automatically posted to pypi
